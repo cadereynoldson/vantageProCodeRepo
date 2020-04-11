@@ -27,6 +27,10 @@ Please fork it, and submit a pull request.
 
 Eclipse EGit: [https://youtube.com/watch?v=LPT7v69guVY]
 
+Serialization: [https://youtube.com/watch?v=qo9S2CeoqQE]
+
+Threads: [https://youtube.com/watch?v=qJsZZAa7yJI]
+
 [https://www.baeldung.com/java-concurrent-skip-list-map]
 
 [https://www.baeldung.com/java-serialization]

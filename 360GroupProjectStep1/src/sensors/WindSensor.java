@@ -44,7 +44,7 @@ public class WindSensor extends AbstractSensor implements Runnable{
 	}
 	
 	public int getWindSpeed() {
-		Random rand = new Random();
+		//Random rand = new Random();
 		return rand.nextInt(maxWindSpeed + 1); // [0, maxWindSpeed]
 	}
 

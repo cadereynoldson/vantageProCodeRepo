@@ -1,33 +1,67 @@
 package controller;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class DataPacket {
+public class DataPacket implements Comparable<DataPacket>, Serializable {
+			
+	// protected means that this class and any subclasses may access the property. 
+	//protected String sensorName = "Abstract Sensor";
+	protected ZonedDateTime eventTime;
+	protected String sensor;
+	protected String measurement;
+	protected double value;
 
+	@Override
+	public int compareTo(DataPacket o) {
+		return eventTime.compareTo(o.eventTime);
+	}
+	
+	 public DataPacket(ZonedDateTime eventTime, String sensor, String measurement, double value) {
+	        this.eventTime = eventTime;
+	        this.measurement = measurement;
+	        this.value = value;
+	        sensor = "null";
+	    }
 
-    private final ZonedDateTime eventTime;
-    private final String sensor;
-    private final ConcurrentHashMap<String, Double> data;
-
-    public DataPacket(String sensor, ZonedDateTime eventTime, ConcurrentHashMap<String, Double> data) {
-    	this.sensor = sensor;
+    public DataPacket(ZonedDateTime eventTime, String measurement, double value) {
         this.eventTime = eventTime;
-        this.data = data;
+        this.measurement = measurement;
+        this.value = value;
+        sensor = "null";
+    }
+    
+
+    public DataPacket(ZonedDateTime eventTime, double value) {
+        this(eventTime, "null", value);
+    }
+    
+    public DataPacket(ZonedDateTime eventTime) {
+        this(eventTime, "null", 0.0);
     }
     
     // returns sensor type for the given data packet
-    String getSensor() {
+    public String getSensor() {
     	return sensor;
+    }
+ 
+    // returns sensor type for the given data packet
+    public String getMeasurement() {
+    	return measurement;
+    }
+    
+ // returns sensor type for the given data packet
+    public double getValue() {
+    	return value;
     }
 
     // return time when data packet was recorded
-    ZonedDateTime getEventTime() {
+    public ZonedDateTime getEventTime() {
         return eventTime;
     }
-
-    // returns data contained in data packet
-    ConcurrentHashMap<String, Double> getData() {
-        return data;
+    
+    public String toString() {
+        return "[" + value + "]";    	
     }
+
 }

@@ -12,6 +12,9 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Random;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutionException;
@@ -23,61 +26,43 @@ import java.util.concurrent.TimeoutException;
 
 import console.Console;
 
-import java.util.concurrent.ScheduledExecutorService; 
+import java.util.concurrent.ScheduledExecutorService;
 
+import sensors.RainSensor;
+import sensors.RainfallRate;
 import sensors.TemperatureSensor;
 import sensors.WindSensor;
+import toDelete.RainDataPacket;
 
 // https://dev4devs.com/2016/06/21/java-how-to-create-threads-that-return-values/
 // https://www.baeldung.com/java-runnable-callable
 
 public class Controller {
-	
-	public static HashMap<Long, String> tempMap = new HashMap<Long, String>();
-	public static HashMap<Long, String> windMap = new HashMap<Long, String>();
 
-	public static HashMap<Long, String> testMap = new HashMap<Long, String>();
-	
-	private final ConcurrentSkipListMap<ZonedDateTime, String> events
-    = new ConcurrentSkipListMap<>(Comparator.comparingLong(value -> value.toInstant().toEpochMilli()));
-
+	private static int rainSensorUpdateInterval = 1; // temporary value for now
+	private static int rainfallRateUpdateInterval = 2; // temporary value for now
+	public static TreeSet<DataPacket> rainSet = new TreeSet<DataPacket>();
+	public static TreeSet<DataPacket> rainRateSet = new TreeSet<DataPacket>();
 
 	public static File f;
 	public static FileOutputStream fos;
 	public static ObjectOutputStream oos;
-	
+	public static Console con = new Console();
+
 	public static void main(String[] args) throws Exception {
 
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 		TemperatureSensor temp = new TemperatureSensor();
 		WindSensor wind = new WindSensor(30);
+		RainSensor rain = new RainSensor();
+		RainfallRate rainfallRate = new RainfallRate();
 
-		scheduledExecutorService.scheduleAtFixedRate(temp, 0, 3, TimeUnit.SECONDS);
-		scheduledExecutorService.scheduleAtFixedRate(wind, 0, 1, TimeUnit.SECONDS);
-		
-		Save obj = new Save();
-		obj.i = 4;
-		f = new File("serializedOutput.txt");
-		fos = new FileOutputStream(f);
-		oos = new ObjectOutputStream(fos);
-		oos.writeObject(obj);
-		
-		Console con = new Console();
-		con.serialize();
+		//scheduledExecutorService.scheduleAtFixedRate(temp, 0, 3, TimeUnit.SECONDS);
+		//scheduledExecutorService.scheduleAtFixedRate(wind, 0, 1, TimeUnit.SECONDS);
+			
+		scheduledExecutorService.scheduleAtFixedRate(rain, 0, 
+				rainSensorUpdateInterval, TimeUnit.SECONDS);
+		scheduledExecutorService.scheduleAtFixedRate(rainfallRate, 0, 
+				rainfallRateUpdateInterval, TimeUnit.SECONDS);
 	}
-	
-    ConcurrentNavigableMap<ZonedDateTime, String> getEventsFromLastMinute() throws InterruptedException {
-    	Thread.sleep(2000);
-        return events.tailMap(ZonedDateTime
-          .now()
-          .minusMinutes(1));
-    }
-
-    ConcurrentNavigableMap<ZonedDateTime, String> getEventsOlderThatOneMinute() {
-        return events.headMap(ZonedDateTime
-          .now()
-          .minusMinutes(1));
-    }
-	
 }
-
