@@ -24,12 +24,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import calculations.RainfallRate;
 import console.Console;
 
 import java.util.concurrent.ScheduledExecutorService;
 
 import sensors.RainSensor;
-import sensors.RainfallRate;
 import sensors.TemperatureSensor;
 import sensors.WindSensor;
 import toDelete.RainDataPacket;
@@ -39,30 +39,66 @@ import toDelete.RainDataPacket;
 
 public class Controller {
 
-	private static int rainSensorUpdateInterval = 1; // temporary value for now
-	private static int rainfallRateUpdateInterval = 2; // temporary value for now
-	public static TreeSet<DataPacket> rainSet = new TreeSet<DataPacket>();
-	public static TreeSet<DataPacket> rainRateSet = new TreeSet<DataPacket>();
+	public static final int rainSensorUpdateInterval = 20; // 20 to 24 seconds
+	public static final int rainfallRateUpdateInterval = 20; // 20 to 24
+	public static final int tempSensorUpdateInterval = 10; // 10 to 12
+	public static final int windChillUpdateInterval = 10; // 10 to 12
+	public static final int windDirectionUpdateInterval = 3; // 2.5 to 3
+	public static final int windSpeedUpdateInterval = 3; // 2.5 to 3
+	public static final int heatIndexUpdateInterval = 10; // 10 to 12
+	public static final int humiditySensorUpdateInterval = 10; 
+	
+	public static final int rateInitialDelay = 5; // 10 seconds
 
-	public static File f;
-	public static FileOutputStream fos;
-	public static ObjectOutputStream oos;
+
+
+	public static final TreeSet<DataPacket<Double>> rainfallSet = new TreeSet<DataPacket<Double>>();
+	public static final TreeSet<DataPacket<Double>> rainRateSet = new TreeSet<DataPacket<Double>>();
+	public static final TreeSet<DataPacket<Double>> temperatureSet = new TreeSet<DataPacket<Double>>();
+	public static final TreeSet<DataPacket<Integer>> humiditySet = new TreeSet<DataPacket<Integer>>();
+	public static final TreeSet<DataPacket<Integer>> windChillSet = new TreeSet<DataPacket<Integer>>();
+	public static final TreeSet<DataPacket<Integer>> windDirectionSet = new TreeSet<DataPacket<Integer>>();
+	public static final TreeSet<DataPacket<Integer>> windSpeedSet = new TreeSet<DataPacket<Integer>>();
+	
+	public static File rainfallFile = new File("rainfallSerializedOutput.txt");
+	public static File rainRateFile = new File("rainfallRateSerializedOutput.txt");
+	public static File temperatureFile = new File("temperatureSerializedOutput.txt");
+	public static File humidityFile = new File("humiditySerializedOutput.txt");
+	public static File windChillFile = new File("windChillSerializedOutput.txt");
+	public static File windDirectionFile = new File("windDirectionSerializedOutput.txt");
+	public static File windSpeedFile = new File("windSpeedSerializedOutput.txt");
+
 	public static Console con = new Console();
 
 	public static void main(String[] args) throws Exception {
 
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-		TemperatureSensor temp = new TemperatureSensor();
-		WindSensor wind = new WindSensor(30);
-		RainSensor rain = new RainSensor();
-		RainfallRate rainfallRate = new RainfallRate();
-
-		//scheduledExecutorService.scheduleAtFixedRate(temp, 0, 3, TimeUnit.SECONDS);
-		//scheduledExecutorService.scheduleAtFixedRate(wind, 0, 1, TimeUnit.SECONDS);
-			
+//		TemperatureSensor temp = new TemperatureSensor();
+		WindSensor windSpeed = new WindSensor(windSpeedSet, windSpeedFile, 30);
+		RainSensor rain = new RainSensor(rainfallSet, rainfallFile);
+		RainfallRate rainfallRate = new RainfallRate(rainRateSet, rainRateFile, rainfallSet);
+		
+		scheduledExecutorService.scheduleAtFixedRate(windSpeed, 0, 
+				windSpeedUpdateInterval, TimeUnit.SECONDS);
+		
+		
 		scheduledExecutorService.scheduleAtFixedRate(rain, 0, 
 				rainSensorUpdateInterval, TimeUnit.SECONDS);
-		scheduledExecutorService.scheduleAtFixedRate(rainfallRate, 0, 
+		
+		
+		
+		// Rates:
+	//ZonedDateTime eventTime = ZonedDateTime.now();
+
+//		DataPacket<Double> rdp = new DataPacket<Double>(eventTime, "rain", "0", 30.1);
+//		rainfallSet.add(rdp);
+//		
+//		eventTime = ZonedDateTime.now();
+//		
+//		DataPacket<Double> rdp2 = new DataPacket<Double>(eventTime, "rain", "0", 20.0);
+//		rainfallSet.add(rdp2);
+		
+		scheduledExecutorService.scheduleAtFixedRate(rainfallRate, rateInitialDelay, 
 				rainfallRateUpdateInterval, TimeUnit.SECONDS);
 	}
 }

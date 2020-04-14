@@ -3,28 +3,33 @@ package controller;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 
-public class DataPacket implements Comparable<DataPacket>, Serializable {
+public class DataPacket<T> implements Comparable<DataPacket<T>>, Serializable {
 			
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// protected means that this class and any subclasses may access the property. 
 	//protected String sensorName = "Abstract Sensor";
 	protected ZonedDateTime eventTime;
+	//Map<String, >
 	protected String sensor;
 	protected String measurement;
-	protected double value;
+	protected T value;
 
 	@Override
-	public int compareTo(DataPacket o) {
+	public int compareTo(DataPacket<T> o) {
 		return eventTime.compareTo(o.eventTime);
 	}
 	
-	 public DataPacket(ZonedDateTime eventTime, String sensor, String measurement, double value) {
+	 public DataPacket(ZonedDateTime eventTime, String sensor, String measurement, T value) {
 	        this.eventTime = eventTime;
 	        this.measurement = measurement;
 	        this.value = value;
 	        sensor = "null";
 	    }
 
-    public DataPacket(ZonedDateTime eventTime, String measurement, double value) {
+    public DataPacket(ZonedDateTime eventTime, String measurement, T value) {
         this.eventTime = eventTime;
         this.measurement = measurement;
         this.value = value;
@@ -32,13 +37,10 @@ public class DataPacket implements Comparable<DataPacket>, Serializable {
     }
     
 
-    public DataPacket(ZonedDateTime eventTime, double value) {
+    public DataPacket(ZonedDateTime eventTime, T value) {
         this(eventTime, "null", value);
     }
     
-    public DataPacket(ZonedDateTime eventTime) {
-        this(eventTime, "null", 0.0);
-    }
     
     // returns sensor type for the given data packet
     public String getSensor() {
@@ -51,7 +53,7 @@ public class DataPacket implements Comparable<DataPacket>, Serializable {
     }
     
  // returns sensor type for the given data packet
-    public double getValue() {
+    public T getValue() {
     	return value;
     }
 

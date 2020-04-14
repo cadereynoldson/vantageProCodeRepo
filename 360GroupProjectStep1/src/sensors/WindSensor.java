@@ -1,8 +1,11 @@
 package sensors;
 
+import java.io.File;
 import java.util.Random;
+import java.util.TreeSet;
 
 import controller.Controller;
+import controller.DataPacket;
 
 /*
  * 
@@ -15,13 +18,13 @@ import controller.Controller;
          
          * 0 <= length < 140: 
  */
-public class WindSensor extends AbstractSensor implements Runnable{
+public class WindSensor extends AbstractSensor<Integer> implements Runnable{
 	
 	private final int maxWindSpeed; // MPH
-	private double windUpdateInterval;
-	
-	public WindSensor(int cableLength) {
-	//	this.windUpdateInterval = windUpdateInterval;
+	//private double windUpdateInterval;
+	public WindSensor(TreeSet<DataPacket<Integer>> outputSet, File f, int cableLength) {
+		super(outputSet, f);
+		//this.windUpdateInterval = windUpdateInterval;
 		maxWindSpeed = calcMaxWindSpeed(cableLength);
 	}
 	
@@ -39,8 +42,8 @@ public class WindSensor extends AbstractSensor implements Runnable{
 	public void run() {
 		//System.out.println("This is the wind sensor");
 		long unixTime = System.currentTimeMillis() / 1000L;
-		Controller.windMap.put(unixTime, "test");
-		System.out.println(unixTime + " This is the wind sensor updating every 1 second" + getWindSpeed());
+		//Controller.windMap.put(unixTime, "test");
+		System.out.println(unixTime + " This is the wind sensor updating every 3 second" + getWindSpeed());
 	}
 	
 	public int getWindSpeed() {

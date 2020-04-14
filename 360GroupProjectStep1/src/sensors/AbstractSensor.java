@@ -1,12 +1,18 @@
 package sensors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.time.ZonedDateTime;
 import java.util.Random;
+import java.util.TreeSet;
 
-public class AbstractSensor {
+import controller.Controller;
+import controller.DataPacket;
+
+public abstract class AbstractSensor<T> {
 
 	// protected means that this class and any subclasses may access the property. 
 	protected String sensorName = "Abstract Sensor";
@@ -20,7 +26,9 @@ public class AbstractSensor {
 	// 	the values it generates later in our JUnit Tests 
 	// 	(make sensor output pseudo-random and reproducible)
 	protected Random rand = new Random(seed);
-	File f;
+	//File f;
+	protected TreeSet<DataPacket<T>> outputSet;
+	protected File f;
 	protected FileOutputStream fos;
 	protected ObjectOutputStream oos;
 	
@@ -34,5 +42,15 @@ public class AbstractSensor {
 		} else {
 			this.updateInterval = updateInterval;
 		}
+	}
+	
+
+	public AbstractSensor(TreeSet<DataPacket<T>> outputSet, File f) {
+		this.outputSet = outputSet;
+		this.f = f;
+	}
+	
+	public void run() {
+
 	}
 }
