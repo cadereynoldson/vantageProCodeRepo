@@ -9,10 +9,7 @@ public class WindChill {
      * @return the calculated wind chill.
      */
     public static double calculateWindChill(double temperature, double windspeed) {
-        if (windspeed < 3)
-            throw new IllegalArgumentException("Windspeed cannot be negative.");
-        else
-            return 35.74 + (0.6215 * temperature) - (35.75 * Math.pow(windspeed, 0.16)) + (0.4275 * temperature * Math.pow(windspeed, 0.16));
+        return 35.74 + (0.6215 * temperature) - (35.75 * Math.pow(windspeed, 0.16)) + (0.4275 * temperature * Math.pow(windspeed, 0.16));
     }
     
     public static void main(String[] args) {

@@ -1,13 +1,83 @@
 
 package calculations;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.time.ZonedDateTime;
+import java.util.Iterator;
+import java.util.TreeSet;
+
+import controller.Controller;
+import controller.DataPacket;
+import sensors.AbstractSensor;
+
 /**
  * Class for calculating the heat index given the relative humidity and temperature. This uses the  
  * @author Cade Reynoldson
  * @version 1.0
  * @date 4/12/2020
  */
-public class HeatIndex {
+public class HeatIndex extends AbstractSensor<Double> implements Runnable {
+    
+
+
+    /** The master treeset which contains information of the measured temperatures. */
+    private TreeSet<DataPacket<Double>> temperatureInput;
+    
+    /** The master treeset which contains information of the measured humidities. */
+    private TreeSet<DataPacket<Double>> humidityInput;
+    
+    /** The string representing what this sensor "measures" */
+    private static String measurementString = "heat index";
+    
+    /** The interval (in seconds) to calculate the dew point. */
+    private static final long CALCULATION_INTERVAL = 15;
+    
+    /**
+     * Creates a new instance of dewpoint calculation thread. 
+     * @param outputSet The set to output data into. 
+     * @param f the file to output data to. 
+     * @param temperatureInput the temperature input set which will be used for calculation. 
+     * @param humidityInput the humidity input set which will be used for calculation. 
+     */
+    public HeatIndex(TreeSet<DataPacket<Double>> outputSet, File f, 
+            TreeSet<DataPacket<Double>> temperatureInput, TreeSet<DataPacket<Double>> humidityInput) {
+        super(outputSet, f);
+        this.temperatureInput = temperatureInput;
+        this.humidityInput = humidityInput;
+        this.sensorName = "Heat index";
+    }
+    
+    /**
+     * Iterates over the data for the past interval, indicated by the calculation interval and calculates the dew point of each "pair"
+     * of values. Will skip over the end values if the one set of data is "longer" than the other.
+     * @return The a tree set of datapackets which contain the calculated dew point values. 
+     */
+    public TreeSet<DataPacket<Double>> calculateHeatIndex() {
+        TreeSet<DataPacket<Double>> calculatedHeatIndexes = new TreeSet<DataPacket<Double>>();
+        ZonedDateTime time = ZonedDateTime.now().minusSeconds(CALCULATION_INTERVAL);
+        TreeSet<DataPacket<Double>> tempTail = (TreeSet<DataPacket<Double>>) temperatureInput.tailSet(new DataPacket<Double>(time, "Temperature", measurementString, 0.0));
+        TreeSet<DataPacket<Double>> humidityTail = (TreeSet<DataPacket<Double>>) humidityInput.tailSet(new DataPacket<Double>(time, "Humidity", measurementString, 0.0));
+        if (tempTail.isEmpty() || humidityTail.isEmpty())
+            throw new IllegalArgumentException("Input for humidity or temperature is empty!");
+        Iterator<DataPacket<Double>> tempIterator = tempTail.iterator();
+        Iterator<DataPacket<Double>> humidityIterator = humidityTail.iterator();
+        while (tempIterator.hasNext() && humidityIterator.hasNext()) { //While both of the sets contain elements to iterate over, calculate their dew points.
+            DataPacket<Double> tempData = tempIterator.next();
+            DataPacket<Double> humidityData = humidityIterator.next();
+            double dewPoint = calculateHeatIndex(tempData.getValue(), humidityData.getValue());
+            calculatedHeatIndexes.add(new DataPacket<Double>(ZonedDateTime.now(), this.sensorName, measurementString, dewPoint));
+        }
+        if (tempIterator.hasNext()) { //If the temperature iterator conatins extra values, notify console.
+            System.out.println("Extra values contained in the temperature set.");
+        } else if (humidityIterator.hasNext()) { //If the humidity iterator contains extra values, notify console. 
+            System.out.println("Extra values contained in the humidity set.");
+        }
+        return calculatedHeatIndexes;
+    }
     
     /**
      * Calculates the heat index given the relative humidity and temperature (in farenheit). 
@@ -62,12 +132,40 @@ public class HeatIndex {
         return 0.5 * (temperature + 61.0 + ((temperature - 68.0) * 1.2) + (relativeHumidity * 0.094));
     }
     
-//    public static void main(String[] args) {
-//        double t1 = calculateHeatIndex(50.0, 60.0);
-//        System.out.println("Heat index of 50RH and 60F (Should be ~58):" + t1);
-//        double t2 = calculateHeatIndex(86, 85);
-//        System.out.println("Heat index of 86RH and 85F (Should be ~100):" + t2);
-//        double t3 = calculateHeatIndex(10, 90);
-//        System.out.println("Heat index of 10RH and 90F (Should be ~85):" + t3);
-//    }
+    @Override
+    public void run() {
+        //Initialization of thread outputs. 
+        try {
+            fos = new FileOutputStream(f);
+            oos = new ObjectOutputStream(fos);
+        } catch (FileNotFoundException e){
+            System.out.println("File not found --- Heat index sensor");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("IO Exeption --- Heat index sensor");
+            e.printStackTrace();
+        }
+        //Code to run the thread. 
+        TreeSet<DataPacket<Double>> calculatedHeatIndexes = calculateHeatIndex();
+        //Add the calculated dew points to the output set. 
+        for (DataPacket<Double> heatIndex : calculatedHeatIndexes) { 
+            outputSet.add(heatIndex);
+        }
+        //Write calculated dew points to the output file. 
+        try {
+            oos.writeObject(calculatedHeatIndexes);
+        } catch (IOException e) {
+            System.out.println("Error writing the calculated heat indexes");
+            e.printStackTrace();
+        }
+        
+        try {
+            Controller.con.<Double>readSerializedData(f);
+            oos.flush();
+            oos.close();
+        } catch (Exception e) {
+            System.out.println("Error closing file out.");
+            e.printStackTrace();
+        }
+    }
 }
